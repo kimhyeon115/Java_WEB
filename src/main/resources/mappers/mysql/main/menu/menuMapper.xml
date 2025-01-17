@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.main.system.menu.mapper.MenuMapper">
+
+    <select id="selectMenuList" parameterType="Map" resultType="Menu">
+		/** com.example.main.system.menu.mapper.MenuMapper.selectMenuList **/
+        SELECT
+        	T1.*
+        	, T2.MENU_NM PARENT_MENU_NM
+			, T2.MENU_SORT PARENT_MENU_SORT
+        	, T3.user_nm as regNm
+        	, T4.user_nm as chgNm
+        FROM ${main.db.schema}.menu_mst T1
+        	LEFT JOIN ${main.db.schema}.menu_mst T2 ON T1.parent_menu_nm = T2.MENU_CD
+        	LEFT JOIN ${main.db.schema}.user_mst T3 ON T1.reg_id = T3.user_id
+        	LEFT JOIN ${main.db.schema}.user_mst T4 ON T1.chg_id = T4.user_id
+        WHERE 1=1
+            <if test="menuNm != null and menuNm != ''">
+				AND T1.menu_nm LIKE CONCAT('%', #{menuNm}, '%')
+			</if>
+			<if test="useYn != null and useYn != ''">
+				AND T1.use_yn = #{useYn}
+			</if>
+        ORDER BY T1.menu_cd
+    </select>
+    
+    <select id="selectMenuListOfLevel" parameterType="Map" resultType="Menu">
+		/** com.example.main.system.menu.mapper.MenuMapper.selectMenuListOfLevel **/
+        SELECT
+        	T1.*
+        	, T2.MENU_NM PARENT_MENU_NM
+			, T2.MENU_SORT PARENT_MENU_SORT
+        FROM ${main.db.schema}.menu_mst T1
+        	LEFT JOIN ${main.db.schema}.menu_mst T2 ON T1.parent_menu_nm = T2.MENU_CD
+        WHERE 1=1
+			AND T1.use_yn = 'Y'
+			AND T1.menu_lv = 2
+        ORDER BY T2.MENU_SORT, T1.MENU_SORT
+    </select>
+    
+    <insert id="insertMenu" parameterType="Map">
+    	/** com.example.main.system.menu.mapper.MenuMapper.insertMenu **/
+		INSERT INTO ${main.db.schema}.menu_mst (
+			menu_nm
+			, menu_desc
+			, parent_menu_nm
+			, menu_lv
+			, menu_sort
+			, use_yn
+			, reg_id
+			, reg_dt
+		)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.menuNm}, #{item.menuDesc}, #{item.parentMenuNm}, #{item.menuLv}, #{item.menuSort}, IFNULL(#{item.useYn}, 'Y'), #{baseUserId}, NOW())
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+	        menu_nm = VALUES(menu_nm)
+	        , menu_desc = VALUES(menu_desc)
+	        , parent_menu_nm = VALUES(parent_menu_nm)
+	        , menu_lv = VALUES(menu_lv)
+	        , menu_sort = VALUES(menu_sort)
+	        , use_yn = VALUES(use_yn)
+	        , chg_id = #{baseUserId}
+	        , chg_dt = NOW()
+    </insert>
+    
+    <update id="deleteMenu" parameterType="Map">
+		/** com.example.main.system.menu.mapper.MenuMapper.deleteMenu **/
+		UPDATE ${main.db.schema}.menu_mst
+		SET
+			use_yn = 'N'
+			, chg_id = #{baseUserId}
+			, chg_dt = NOW()
+		WHERE menu_cd IN
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item.menuCd}
+		</foreach>
+	</update>
+	
+</mapper>

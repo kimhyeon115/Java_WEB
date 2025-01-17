@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.main.system.user.mapper.UserMapper">
+
+	<select id="selectUserList" parameterType="Map" resultType="User">
+		/** com.example.main.system.user.mapper.UserMapper.selectUserList **/
+        SELECT
+        	T1.*
+        	, T2.user_nm as regNm
+        	, T3.user_nm as chgNm
+        FROM ${main.db.schema}.user_mst T1
+        	LEFT JOIN ${main.db.schema}.user_mst T2 ON T1.reg_id = T2.user_id
+        	LEFT JOIN ${main.db.schema}.user_mst T3 ON T1.chg_id = T3.user_id
+        WHERE
+        	T1.delete_yn = 'N'
+        	<if test="userNm != null and userNm != ''">
+				AND T1.user_nm LIKE CONCAT('%', #{userNm}, '%')
+			</if>
+			<if test="department != null and department != ''">
+				AND T1.department = #{department}
+			</if>
+			<if test="useYn != null and useYn != ''">
+				AND T1.use_yn = #{useYn}
+			</if>
+        ORDER BY T1.REG_DT DESC
+    </select>
+
+    <select id="selectUser" parameterType="Map" resultType="User">
+		/** com.example.main.system.user.mapper.UserMapper.selectUser **/
+        SELECT * FROM ${main.db.schema}.user_mst WHERE user_id = #{userId} AND delete_yn = 'N'
+    </select>
+    
+	<select id="selectUserByAll" parameterType="Map" resultType="User">
+		/** com.example.main.system.user.mapper.UserMapper.selectUserByAll **/
+        SELECT * FROM ${main.db.schema}.user_mst WHERE user_id = #{userId}
+    </select>
+    
+    <select id="cntUserByAll" parameterType="Map" resultType="int">
+		/** com.example.main.system.user.mapper.UserMapper.selectUserByAll */
+        SELECT COUNT(*) FROM ${main.db.schema}.user_mst WHERE user_id = #{userId} AND delete_yn = 'Y'
+    </select>
+    
+    <insert id="insertUser" parameterType="Map">
+		/** com.example.main.system.user.mapper.UserMapper.insertUser **/
+		INSERT INTO ${main.db.schema}.user_mst (
+			user_id
+			, user_pwd
+			, user_nm
+			, department
+			, email
+			, phone
+			, remark
+			, use_yn
+			, reg_id
+			, reg_dt
+		)
+		VALUES 
+		<foreach collection="list" item="item" separator=",">
+			(#{item.userId}, #{item.userPwd}, #{item.userNm}, #{item.department}, #{item.email}, #{item.phone}, #{item.remark}, IFNULL(#{item.useYn}, 'Y'), #{baseUserId}, NOW())
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+			user_nm = VALUES(user_nm)
+			, department = VALUES(department)
+			, email = VALUES(email)
+			, phone = VALUES(phone)
+			, remark = VALUES(remark)
+			, use_yn = VALUES(use_yn)
+			, chg_id = #{baseUserId}
+			, chg_dt = NOW()
+    </insert>
+    
+    <update id="deleteUser" parameterType="Map">
+		/** com.example.main.system.user.mapper.UserMapper.deleteUser **/
+		UPDATE ${main.db.schema}.user_mst
+		SET
+			delete_yn = 'Y' 
+			, chg_id = #{baseUserId}
+			, chg_dt = NOW()
+		WHERE user_id IN 
+		<foreach collection="list" item="item" open="(" close=")" separator=","> 
+			#{item.userId}
+		</foreach> 
+	</update>
+	
+	<update id="resetPassword" parameterType="Map">
+		/** com.example.main.system.user.mapper.UserMapper.resetPassword **/
+		UPDATE ${main.db.schema}.user_mst
+		SET
+			user_pwd = #{newPwd}
+			, init_yn = 'N'
+			, last_pwd_chg_dt = NOW()
+		WHERE user_id = #{userId}
+	</update>
+	
+    <update id="updateLastLoginDt" parameterType="Map">
+		/** com.example.main.system.user.mapper.UserMapper.updateLastLoginDt **/
+		UPDATE ${main.db.schema}.user_mst
+		SET
+			last_login_dt = NOW() 
+			, login_stat = 'Y'
+		WHERE user_id = #{userId}
+	</update>
+	
+	<insert id="insertLoginHi" parameterType="Map">
+		/** com.example.main.system.user.mapper.UserMapper.insertLoginHi **/
+		INSERT INTO ${main.db.schema}.user_login_hi (
+			login_dt
+			, user_id
+			, success_yn
+		)
+		VALUES
+		(
+			NOW()
+			, #{userId}
+			, #{successYn}
+		)
+	</insert>
+	
+	<update id="logout" parameterType="Map">
+		/** com.example.main.system.user.mapper.UserMapper.logout **/
+		UPDATE ${main.db.schema}.user_mst
+		SET
+			login_stat = 'N'
+		WHERE user_id = #{userId}
+	</update>
+</mapper>
