@@ -16,11 +16,13 @@
   <typeAliases>
   	<package name="com.example.main.system.user.model"/>
   	<package name="com.example.main.system.menu.model"/>
+  	<package name="com.example.main.auth.session.model"/>
   </typeAliases>
   
   <mappers>
   	<mapper resource="mappers/mysql/main/user/userMapper.xml"/>
   	<mapper resource="mappers/mysql/main/menu/menuMapper.xml"/>
+  	<mapper resource="mappers/mysql/main/session/sessionMapper.xml"/>
   </mappers>
   
 </configuration>

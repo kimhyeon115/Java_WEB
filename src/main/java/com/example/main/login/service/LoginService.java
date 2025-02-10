@@ -6,7 +6,7 @@ import com.example.main.common.model.ResponseData;
 
 public interface LoginService {
 	
-	ResponseEntity<ResponseData> login(HashMap<String, Object> paramHashMap);
+	ResponseEntity<ResponseData> login(HashMap<String, Object> paramMap);
 
 	ResponseEntity<ResponseData> resetPassword(HashMap<String, Object> paramMap);
 	

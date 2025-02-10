@@ -8,12 +8,12 @@ import com.example.main.common.model.ResponseData;
 
 public interface UserService {
 	
-	ResponseEntity<ResponseData> selectUserList(HashMap<String, Object> paramHashMap);
+	ResponseEntity<ResponseData> selectUserList(HashMap<String, Object> paramMap);
 	
-	ResponseEntity<ResponseData> selectUser(HashMap<String, Object> paramHashMap);
+	ResponseEntity<ResponseData> selectUser(HashMap<String, Object> paramMap);
 
-	ResponseEntity<ResponseData> insertUser(HashMap<String, Object> paramHashMap);
+	ResponseEntity<ResponseData> insertUser(HashMap<String, Object> paramMap);
 	
-	ResponseEntity<ResponseData> deleteUser(HashMap<String, Object> paramHashMap);
+	ResponseEntity<ResponseData> deleteUser(HashMap<String, Object> paramMap);
 	
 }

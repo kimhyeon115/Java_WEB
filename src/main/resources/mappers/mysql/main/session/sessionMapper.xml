@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.main.auth.session.mapper.SessionMapper">
+
+    <select id="selectSession" parameterType="String" resultType="Session">
+		/** com.example.main.auth.session.mapper.SessionMapper.selectSession **/
+        SELECT * FROM ${main.db.schema}.user_session WHERE session_id = #{sessionId}
+    </select>
+    
+    <insert id="insertSession" parameterType="Session">
+		/** com.example.main.auth.session.mapper.SessionMapper.insertSession **/
+		INSERT INTO ${main.db.schema}.user_session (
+			session_id
+			, user_id
+			, reg_dt
+			, last_login_dt
+			, expiry_dt
+		)
+		VALUES
+			(#{sessionId}, #{userId}, NOW(), #{lastLoginDt}, DATE_ADD(NOW(), INTERVAL #{expiryDt} MINUTE))
+    </insert>
+    
+    <update id="updateSession" parameterType="Map">
+		/** com.example.main.auth.session.mapper.SessionMapper.updateSession **/
+		UPDATE ${main.db.schema}.user_session
+		SET
+			expiry_time = #{expiryDt}
+		WHERE session_id = #{sessionId} AND user_id = #{userId}
+	</update>
+	
+	<delete id="deleteSession" parameterType="Map">
+		/** com.example.main.auth.session.mapper.SessionMapper.deleteSession **/
+		UPDATE ${main.db.schema}.user_session
+		SET
+			expiry_time = #{expiryDt}
+		WHERE session_id = #{sessionId} AND user_id = #{userId}
+	</delete>
+</mapper>

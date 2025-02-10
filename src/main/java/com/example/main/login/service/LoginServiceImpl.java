@@ -1,14 +1,20 @@
 package com.example.main.login.service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import com.example.main.auth.session.service.SessionService;
 import com.example.main.common.model.HeaderEntity;
 import com.example.main.common.model.ResponseData;
 import com.example.main.system.user.mapper.UserMapper;
@@ -23,6 +29,9 @@ public class LoginServiceImpl implements LoginService {
 	@Autowired
 	private UserMapper userMapper;
 	
+	@Autowired
+	private SessionService sessionService;
+	
 	/** USER 로그인 **/
 	public ResponseEntity<ResponseData> login(HashMap<String, Object> paramMap) {
 		HeaderEntity header;
@@ -30,6 +39,7 @@ public class LoginServiceImpl implements LoginService {
 		
 		try {
 			User user = userMapper.selectUser(paramMap);
+			
 			if(user == null) {
 				header = HeaderEntity.builder().code(Const.UNAUTHORIZED_CODE).message(Const.ACCOUNT_IS_NOT_EXIST).build();
 			} else if (!Bcrypt.matchesBcrypt((String)paramMap.get("userPwd"), user.getUserPwd())) {
@@ -38,10 +48,17 @@ public class LoginServiceImpl implements LoginService {
 				userMapper.insertLoginHi(paramMap);
 			} else {
 				header = HeaderEntity.builder().code(Const.SUCCESS_CODE).message(Const.SUCCESS).build();
-				result.put("user", userMapper.selectUser(paramMap));
+				result.put("user", user);
+				
+				HttpHeaders headers = sessionService.insertSession(user);
+				
 				userMapper.updateLastLoginDt(paramMap);
 				paramMap.put("successYn", "Y");
 				userMapper.insertLoginHi(paramMap);
+				
+				ResponseData commRes = ResponseData.builder().header(header).body(result).build();
+				
+				return ResponseEntity.ok().headers(headers).body(commRes);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
